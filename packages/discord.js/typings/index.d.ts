@@ -985,7 +985,7 @@ export class Client<Ready extends boolean = boolean> extends BaseClient {
   public guilds: GuildManager;
   public lastPingTimestamp: number;
   public options: Omit<ClientOptions, 'intents'> & { intents: IntentsBitField };
-  public get ping(): number;
+  public get ping(): number | null;
   public get readyAt(): If<Ready, Date>;
   public readyTimestamp: If<Ready, number>;
   public sweepers: Sweepers;
@@ -2398,7 +2398,6 @@ export class MessagePayload {
   public get isWebhook(): boolean;
   public get isMessage(): boolean;
   public get isMessageManager(): boolean;
-  public get isInteraction(): boolean;
   public files: RawFile[] | null;
   public options: MessagePayloadOption;
   public target: MessageTarget;
@@ -5731,7 +5730,7 @@ export type GuildAuditLogsResolvable = AuditLogEvent | null;
 export type GuildAuditLogsTargetType = GuildAuditLogsTypes[keyof GuildAuditLogsTypes][0] | 'All' | 'Unknown';
 
 export type GuildAuditLogsTargets = {
-  [key in GuildAuditLogsTargetType]: GuildAuditLogsTargetType;
+  [Key in GuildAuditLogsTargetType]: GuildAuditLogsTargetType;
 };
 
 export type GuildBanResolvable = GuildBan | UserResolvable;
@@ -6066,15 +6065,19 @@ export interface InteractionCollectorOptions<
 }
 
 export interface InteractionDeferReplyOptions {
-  ephemeral?: boolean;
+  flags?: BitFieldResolvable<
+    Extract<MessageFlagsString, 'Ephemeral' | 'SuppressEmbeds' | 'SuppressNotifications'>,
+    MessageFlags.Ephemeral | MessageFlags.SuppressEmbeds | MessageFlags.SuppressNotifications
+  >;
   fetchReply?: boolean;
 }
 
-export interface InteractionDeferUpdateOptions extends Omit<InteractionDeferReplyOptions, 'ephemeral'> {}
+export interface InteractionDeferUpdateOptions {
+  fetchReply?: boolean;
+}
 
 export interface InteractionReplyOptions extends BaseMessageOptionsWithPoll {
   tts?: boolean;
-  ephemeral?: boolean;
   fetchReply?: boolean;
   flags?: BitFieldResolvable<
     Extract<MessageFlagsString, 'Ephemeral' | 'SuppressEmbeds' | 'SuppressNotifications'>,
