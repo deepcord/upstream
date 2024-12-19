@@ -12,7 +12,7 @@
  * @property {string} ChannelDelete channelDelete
  * @property {string} ChannelPinsUpdate channelPinsUpdate
  * @property {string} ChannelUpdate channelUpdate
- * @property {string} ClientReady ready
+ * @property {string} ClientReady clientReady
  * @property {string} Debug debug
  * @property {string} EntitlementCreate entitlementCreate
  * @property {string} EntitlementUpdate entitlementUpdate
@@ -64,6 +64,9 @@
  * @property {string} StageInstanceCreate stageInstanceCreate
  * @property {string} StageInstanceDelete stageInstanceDelete
  * @property {string} StageInstanceUpdate stageInstanceUpdate
+ * @property {string} SubscriptionCreate subscriptionCreate
+ * @property {string} SubscriptionUpdate subscriptionUpdate
+ * @property {string} SubscriptionDelete subscriptionDelete
  * @property {string} ThreadCreate threadCreate
  * @property {string} ThreadDelete threadDelete
  * @property {string} ThreadListSync threadListSync
@@ -72,6 +75,7 @@
  * @property {string} ThreadUpdate threadUpdate
  * @property {string} TypingStart typingStart
  * @property {string} UserUpdate userUpdate
+ * @property {string} VoiceChannelEffectSend voiceChannelEffectSend
  * @property {string} VoiceServerUpdate voiceServerUpdate
  * @property {string} VoiceStateUpdate voiceStateUpdate
  * @property {string} Warn warn
@@ -146,6 +150,9 @@ module.exports = {
   StageInstanceCreate: 'stageInstanceCreate',
   StageInstanceDelete: 'stageInstanceDelete',
   StageInstanceUpdate: 'stageInstanceUpdate',
+  SubscriptionCreate: 'subscriptionCreate',
+  SubscriptionUpdate: 'subscriptionUpdate',
+  SubscriptionDelete: 'subscriptionDelete',
   ThreadCreate: 'threadCreate',
   ThreadDelete: 'threadDelete',
   ThreadListSync: 'threadListSync',
@@ -154,6 +161,7 @@ module.exports = {
   ThreadUpdate: 'threadUpdate',
   TypingStart: 'typingStart',
   UserUpdate: 'userUpdate',
+  VoiceChannelEffectSend: 'voiceChannelEffectSend',
   VoiceServerUpdate: 'voiceServerUpdate',
   VoiceStateUpdate: 'voiceStateUpdate',
   Warn: 'warn',
