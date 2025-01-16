@@ -634,7 +634,7 @@ export abstract class BaseGuild extends Base {
 
 export class BaseGuildEmoji extends Emoji {
   protected constructor(client: Client<true>, data: RawGuildEmojiData, guild: Guild | GuildPreview);
-  public imageURL(options?: BaseImageURLOptions): string;
+  public imageURL(options?: ImageURLOptions): string;
   public get url(): string;
   public available: boolean | null;
   public get createdAt(): Date;
@@ -1333,7 +1333,7 @@ export class Emoji extends Base {
   public id: Snowflake | null;
   public name: string | null;
   public get identifier(): string;
-  public imageURL(options?: BaseImageURLOptions): string | null;
+  public imageURL(options?: ImageURLOptions): string | null;
   public get url(): string | null;
   public toJSON(): unknown;
   public toString(): string;
@@ -4584,7 +4584,7 @@ export interface TextBasedChannelFields<InGuild extends boolean = boolean, InDM 
   bulkDelete(
     messages: Collection<Snowflake, Message> | readonly MessageResolvable[] | number,
     filterOld?: boolean,
-  ): Promise<Collection<Snowflake, Message | PartialMessage | undefined>>;
+  ): Promise<Snowflake[]>;
   createMessageComponentCollector<ComponentType extends MessageComponentType>(
     options?: MessageChannelCollectorOptionsParams<ComponentType, true>,
   ): InteractionCollector<MappedInteractionTypes[ComponentType]>;
