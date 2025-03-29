@@ -22,7 +22,7 @@
         },
         {
             "name": "formatters",
-            "directory": "paccages/formatters",
+            "directory": "packages/formatters",
             "target": "git@github.com:deepcord/formatters.git"
         },
         {
