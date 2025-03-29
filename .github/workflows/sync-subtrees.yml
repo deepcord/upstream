@@ -36,7 +36,7 @@ jobs:
 
             # Cache the splitsh executable to speedup future runs
             -   name: Cache splitsh-lite
-                uses: actions/cache@v2
+                uses: actions/cache@v3
                 with:
                     path: './splitsh'
                     key: '${{ runner.os }}-splitsh-v101'
