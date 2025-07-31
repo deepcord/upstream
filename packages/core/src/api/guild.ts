@@ -89,9 +89,7 @@ import {
 	type RESTPostAPIGuildStickerResult,
 	type RESTPostAPIGuildTemplatesJSONBody,
 	type RESTPostAPIGuildTemplatesResult,
-	type RESTPostAPIGuildsJSONBody,
 	type RESTPostAPIGuildsMFAResult,
-	type RESTPostAPIGuildsResult,
 	type RESTPutAPIGuildBanJSONBody,
 	type RESTPutAPIGuildMemberJSONBody,
 	type RESTPutAPIGuildMemberResult,
@@ -149,17 +147,6 @@ export class GuildsAPI {
 	}
 
 	/**
-	 * Creates a guild
-	 *
-	 * @see {@link https://discord.com/developers/docs/resources/guild#create-guild}
-	 * @param body - The guild to create
-	 * @param options - The options for creating the guild
-	 */
-	public async create(body: RESTPostAPIGuildsJSONBody, { auth, signal }: Pick<RequestData, 'auth' | 'signal'> = {}) {
-		return this.rest.post(Routes.guilds(), { auth, body, signal }) as Promise<RESTPostAPIGuildsResult>;
-	}
-
-	/**
 	 * Edits a guild
 	 *
 	 * @see {@link https://discord.com/developers/docs/resources/guild#modify-guild}
@@ -187,11 +174,8 @@ export class GuildsAPI {
 	 * @param guildId - The id of the guild to delete
 	 * @param options - The options for deleting this guild
 	 */
-	public async delete(
-		guildId: Snowflake,
-		{ auth, reason, signal }: Pick<RequestData, 'auth' | 'reason' | 'signal'> = {},
-	) {
-		await this.rest.delete(Routes.guild(guildId), { auth, reason, signal });
+	public async delete(guildId: Snowflake, { auth, signal }: Pick<RequestData, 'auth' | 'signal'> = {}) {
+		await this.rest.delete(Routes.guild(guildId), { auth, signal });
 	}
 
 	/**

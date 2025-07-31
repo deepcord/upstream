@@ -1,4 +1,4 @@
-/* eslint-disable max-len */
+/* eslint-disable unicorn/no-empty-file */
 
 /**
  * @external ActivityFlags
@@ -547,6 +547,11 @@
 /**
  * @external MessageFlags
  * @see {@link https://discord-api-types.dev/api/discord-api-types-v10/enum/MessageFlags}
+ */
+
+/**
+ * @external NameplatePalette
+ * @see {@link https://discord-api-types.dev/api/discord-api-types-v10/enum/NameplatePalette}
  */
 
 /**
