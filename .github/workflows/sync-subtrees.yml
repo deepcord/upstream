@@ -22,7 +22,7 @@ jobs:
         name: Sync commits
         if: github.repository == 'deepcord/upstream' # Execute this workflow job only on the main repository.
         steps:
-            -   uses: actions/checkout@v2
+            -   uses: actions/checkout@v4
                 with:
                     persist-credentials: false
                     fetch-depth: 0
