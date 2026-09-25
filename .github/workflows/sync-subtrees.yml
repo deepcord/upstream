@@ -1,48 +1,117 @@
 on:
-    workflow_dispatch: # on button click
-    push:
-        # Only trigger for specific branches or changes in specific paths.
-        branches:
-            - '*'
-        paths:
-            - packages/**
-        # Tag push events should be ignored, they will be handled with the create event below.
-        tags-ignore:
-            - '*'
-    create:
-        tags:
-            - '*'
-    delete:
-        tags:
-            - '*'
+  workflow_dispatch:
+
+  push:
+    branches:
+      - '*'
+    paths:
+      - packages/**
+    tags-ignore:
+      - '*'
+
+  create:
+    tags:
+      - '*'
+
+  delete:
+    tags:
+      - '*'
 
 jobs:
-    sync_commits:
-        runs-on: ubuntu-latest
-        name: Sync commits
-        if: github.repository == 'deepcord/upstream' # Execute this workflow job only on the main repository.
-        steps:
-            -   uses: actions/checkout@v4
-                with:
-                    persist-credentials: false
-                    fetch-depth: 0
+  sync_commits:
+    runs-on: ubuntu-latest
+    name: Sync ${{ matrix.package }}
 
-            # Add a personal access token to the repository secrets. This will allow the splitter action to push the new commits
-            -   uses: frankdejonge/use-github-token@1.0.2
-                with:
-                    authentication: 'deepcord:${{ secrets.PERSONAL_GITHUB_TOKEN }}'
-                    user_name: 'subtrees[bot]'
-                    user_email: 'sushi-iodize-saga@duck.com'
+    if: github.repository == 'deepcord/upstream'
 
-            # Cache the splitsh executable to speedup future runs
-            -   name: Cache splitsh-lite
-                uses: actions/cache@v4
-                with:
-                    path: './splitsh'
-                    key: '${{ runner.os }}-splitsh-v101'
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - discord.js
+          - builders
+          - collection
+          - core
+          - formatters
+          - proxy
+          - rest
+          - voice
+          - util
+          - ws
 
-            # Sync commits and tags for the configured subtree splits
-            -   name: subtree split
-                uses: acrobat/subtree-splitter@v1.1.3
-                with:
-                    config-path: .github/subtree-splitter-config.json # Reference the location where you saved your config file
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      # Add a personal access token to the repository secrets.
+      - name: Configure Git authentication
+        uses: frankdejonge/use-github-token@1.0.2
+        with:
+          authentication: 'deepcord:${{ secrets.PERSONAL_GITHUB_TOKEN }}'
+          user_name: 'subtrees[bot]'
+          user_email: 'sushi-iodize-saga@duck.com'
+
+      # Cache the splitsh executable.
+      - name: Cache splitsh-lite
+        uses: actions/cache@v6
+        with:
+          path: './splitsh'
+          key: '${{ runner.os }}-splitsh-v101'
+
+      # Create a config containing only this matrix package.
+      - name: Create subtree config
+        env:
+          PACKAGE: ${{ matrix.package }}
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+
+          const packageName = process.env.PACKAGE;
+          const configPath = '.github/subtree-splitter-config.json';
+
+          const config = JSON.parse(
+              fs.readFileSync(configPath, 'utf8')
+          );
+
+          if (!Array.isArray(config['subtree-splits'])) {
+              throw new Error(
+                  'Expected "subtree-splits" to be an array'
+              );
+          }
+
+          const split = config['subtree-splits'].find(
+              entry => entry.name === packageName
+          );
+
+          if (!split) {
+              throw new Error(
+                  `No subtree split found for "${packageName}"`
+              );
+          }
+
+          const packageConfig = {
+              'subtree-splits': [split]
+          };
+
+          fs.writeFileSync(
+              configPath,
+              JSON.stringify(packageConfig, null, 4) + '\n'
+          );
+
+          console.log(
+              `Using subtree configuration for: ${packageName}`
+          );
+          NODE
+
+          echo "Generated config:"
+          cat .github/subtree-splitter-config.json
+
+      # Sync this package only.
+      - name: Subtree split
+        uses: acrobat/subtree-splitter@v1.1.5
+        with:
+          config-path: .github/subtree-splitter-config.json
