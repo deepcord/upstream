@@ -1,9 +1,6 @@
 import { Buffer } from 'node:buffer';
 import { once } from 'node:events';
-import { clearInterval, clearTimeout, setInterval, setTimeout } from 'node:timers';
 import { setTimeout as sleep } from 'node:timers/promises';
-import { URLSearchParams } from 'node:url';
-import { TextDecoder } from 'node:util';
 import type * as nativeZlib from 'node:zlib';
 import { Collection } from '@discordjs/collection';
 import { lazy, shouldUseGlobalFetchAndWebSocket } from '@discordjs/util';
@@ -189,7 +186,6 @@ export class WebSocketShard extends AsyncEventEmitter<WebSocketShardEventsMap> {
 		const { version, encoding, compression, useIdentifyCompression } = this.strategy.options;
 		this.identifyCompressionEnabled = useIdentifyCompression;
 
-		// eslint-disable-next-line id-length
 		const params = new URLSearchParams({ v: version, encoding });
 		if (compression !== null) {
 			if (useIdentifyCompression) {
@@ -220,7 +216,7 @@ export class WebSocketShard extends AsyncEventEmitter<WebSocketShardEventsMap> {
 
 						this.nativeInflate = inflate;
 					} else {
-						console.warn('WebSocketShard: Compression is set to native but node:zlib is not available.');
+						console.warn('WebSocketShard: Compression is set to native zlib but node:zlib is not available.');
 						params.delete('compress');
 					}
 
@@ -236,6 +232,34 @@ export class WebSocketShard extends AsyncEventEmitter<WebSocketShardEventsMap> {
 						});
 					} else {
 						console.warn('WebSocketShard: Compression is set to zlib-sync, but it is not installed.');
+						params.delete('compress');
+					}
+
+					break;
+				}
+
+				case CompressionMethod.ZstdNative: {
+					const zlib = await getNativeZlib();
+					if (zlib && 'createZstdDecompress' in zlib) {
+						this.inflateBuffer = [];
+
+						const inflate = zlib.createZstdDecompress({
+							chunkSize: 65_535,
+						}) as nativeZlib.Inflate;
+
+						inflate.on('data', (chunk) => {
+							this.inflateBuffer.push(chunk);
+						});
+
+						inflate.on('error', (error) => {
+							this.emit(WebSocketShardEvents.Error, error);
+						});
+
+						this.nativeInflate = inflate;
+					} else {
+						console.warn(
+							'WebSocketShard: Compression is set to native zstd but node:zlib is not available or your node version does not support zstd decompression.',
+						);
 						params.delete('compress');
 					}
 
@@ -336,7 +360,10 @@ export class WebSocketShard extends AsyncEventEmitter<WebSocketShardEventsMap> {
 		this.failedToConnectDueToNetworkError = false;
 
 		// Clear session state if applicable
-		if (options.recover !== WebSocketShardDestroyRecovery.Resume) {
+		if (
+			(options.recover !== WebSocketShardDestroyRecovery.Resume && options.code !== CloseCodes.Resuming) ||
+			options.code === CloseCodes.Normal
+		) {
 			await this.strategy.updateSessionInfo(this.id, null);
 		}
 
@@ -525,6 +552,7 @@ export class WebSocketShard extends AsyncEventEmitter<WebSocketShardEventsMap> {
 			`shard id: ${this.id.toString()}`,
 			`shard count: ${this.strategy.options.shardCount}`,
 			`intents: ${this.strategy.options.intents}`,
+			`capabilities: ${this.strategy.options.capabilities}`,
 			`compression: ${this.transportCompressionEnabled ? CompressionParameterMap[this.strategy.options.compression!] : this.identifyCompressionEnabled ? 'identify' : 'none'}`,
 		]);
 
@@ -532,6 +560,7 @@ export class WebSocketShard extends AsyncEventEmitter<WebSocketShardEventsMap> {
 			token: this.strategy.options.token,
 			properties: this.strategy.options.identifyProperties,
 			intents: this.strategy.options.intents,
+			capabilities: this.strategy.options.capabilities,
 			compress: this.identifyCompressionEnabled,
 			shard: [this.id, this.strategy.options.shardCount],
 		};
@@ -631,12 +660,14 @@ export class WebSocketShard extends AsyncEventEmitter<WebSocketShardEventsMap> {
 
 		// Deal with transport compression
 		if (this.transportCompressionEnabled) {
+			// Each WS message received is a full gateway message for zstd streaming, but for zlib it's chunked
 			const flush =
-				decompressable.length >= 4 &&
-				decompressable.at(-4) === 0x00 &&
-				decompressable.at(-3) === 0x00 &&
-				decompressable.at(-2) === 0xff &&
-				decompressable.at(-1) === 0xff;
+				this.strategy.options.compression === CompressionMethod.ZstdNative ||
+				(decompressable.length >= 4 &&
+					decompressable.at(-4) === 0x00 &&
+					decompressable.at(-3) === 0x00 &&
+					decompressable.at(-2) === 0xff &&
+					decompressable.at(-1) === 0xff);
 
 			if (this.nativeInflate) {
 				const doneWriting = new Promise<void>((resolve) => {
