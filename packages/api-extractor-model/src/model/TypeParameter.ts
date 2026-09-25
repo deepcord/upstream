@@ -86,12 +86,11 @@ export class TypeParameter {
 	private readonly _parent: ApiTypeParameterListMixin;
 
 	public constructor(options: ITypeParameterOptions) {
-		const { name, constraintExcerpt, defaultTypeExcerpt, isOptional, parent } = options;
-		this.name = name;
-		this.constraintExcerpt = constraintExcerpt;
-		this.defaultTypeExcerpt = defaultTypeExcerpt;
-		this.isOptional = isOptional;
-		this._parent = parent;
+		this.name = options.name;
+		this.constraintExcerpt = options.constraintExcerpt;
+		this.defaultTypeExcerpt = options.defaultTypeExcerpt;
+		this.isOptional = options.isOptional;
+		this._parent = options.parent;
 	}
 
 	/**

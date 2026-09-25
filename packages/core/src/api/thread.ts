@@ -5,7 +5,6 @@ import {
 	Routes,
 	type RESTGetAPIChannelThreadMemberQuery,
 	type RESTGetAPIChannelThreadMemberResult,
-	type RESTGetAPIChannelThreadMembersQuery,
 	type RESTGetAPIChannelThreadMembersResult,
 	type Snowflake,
 } from 'discord-api-types/v10';
@@ -113,22 +112,16 @@ export class ThreadsAPI {
 	}
 
 	/**
-	 * Fetches members of a thread
+	 * Fetches all members of a thread
 	 *
 	 * @see {@link https://discord.com/developers/docs/resources/channel#list-thread-members}
 	 * @param threadId - The id of the thread to fetch the members from
-	 * @param query - The query for fetching the members
 	 * @param options - The options for fetching the members
 	 */
-	public async getMembers(
-		threadId: Snowflake,
-		query: RESTGetAPIChannelThreadMembersQuery = {},
-		{ auth, signal }: Pick<RequestData, 'auth' | 'signal'> = {},
-	) {
+	public async getAllMembers(threadId: Snowflake, { auth, signal }: Pick<RequestData, 'auth' | 'signal'> = {}) {
 		return this.rest.get(Routes.threadMembers(threadId), {
 			auth,
 			signal,
-			query: makeURLSearchParams(query),
 		}) as Promise<RESTGetAPIChannelThreadMembersResult>;
 	}
 }

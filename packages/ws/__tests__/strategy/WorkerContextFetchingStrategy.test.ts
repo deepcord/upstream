@@ -1,4 +1,6 @@
-import { test, vi, expect } from 'vitest';
+/* eslint-disable @typescript-eslint/consistent-type-imports */
+// @ts-nocheck
+import { beforeEach, test, vi, expect } from 'vitest';
 import {
 	managerToFetchingStrategyOptions,
 	WorkerContextFetchingStrategy,
@@ -7,20 +9,17 @@ import {
 	WorkerReceivePayloadOp,
 	type WorkerReceivePayload,
 	type WorkerSendPayload,
-	type SessionInfo,
 } from '../../src/index.js';
 import { mockGatewayInformation } from '../gateway.mock.js';
 
-const session: SessionInfo = {
+const session = {
 	shardId: 0,
 	shardCount: 1,
 	sequence: 123,
 	sessionId: 'abc',
-	resumeURL: 'wss://resume.url/',
 };
 
 vi.mock('node:worker_threads', async () => {
-	// eslint-disable-next-line @typescript-eslint/consistent-type-imports
 	const { EventEmitter }: typeof import('node:events') = await vi.importActual('node:events');
 	class MockParentPort extends EventEmitter {
 		public postMessage(message: WorkerReceivePayload) {
@@ -46,16 +45,10 @@ test('session info', async () => {
 	const manager = new WebSocketManager({
 		token: 'A-Very-Fake-Token',
 		intents: 0,
-		buildStrategy: () => ({
-			spawn: vi.fn(),
-			connect: vi.fn(),
-			destroy: vi.fn(),
-			send: vi.fn(),
-			fetchStatus: vi.fn(),
-		}),
+		async fetchGatewayInformation() {
+			return mockGatewayInformation;
+		},
 	});
-
-	await manager.connect({ gatewayInformation: mockGatewayInformation });
 
 	const strategy = new WorkerContextFetchingStrategy(await managerToFetchingStrategyOptions(manager));
 

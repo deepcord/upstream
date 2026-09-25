@@ -1,4 +1,5 @@
 /* eslint-disable id-length */
+import { setImmediate } from 'node:timers';
 import type { GatewayDispatchPayload, GatewaySendPayload } from 'discord-api-types/v10';
 import { GatewayDispatchEvents, GatewayOpcodes } from 'discord-api-types/v10';
 import { test, vi, expect, afterEach } from 'vitest';
@@ -142,6 +143,9 @@ test('spawn, connect, send a message, session info, and destroy', async () => {
 	const manager = new WebSocketManager({
 		token: 'A-Very-Fake-Token',
 		intents: 0,
+		async fetchGatewayInformation() {
+			return mockGatewayInformation;
+		},
 		shardIds: [0, 1],
 		retrieveSessionInfo: mockRetrieveSessionInfo,
 		updateSessionInfo: mockUpdateSessionInfo,
@@ -150,7 +154,7 @@ test('spawn, connect, send a message, session info, and destroy', async () => {
 
 	const managerEmitSpy = vi.spyOn(manager, 'emit');
 
-	await manager.connect({ gatewayInformation: mockGatewayInformation });
+	await manager.connect();
 	expect(mockConstructor).toHaveBeenCalledWith(
 		expect.stringContaining('defaultWorker.js'),
 		expect.objectContaining({ workerData: expect.objectContaining({ shardIds: [0, 1] }) }),

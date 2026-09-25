@@ -1,6 +1,7 @@
 import type { NextConfig } from 'next';
 
 export default {
+	reactStrictMode: true,
 	images: {
 		dangerouslyAllowSVG: true,
 		contentDispositionType: 'attachment',
@@ -17,6 +18,13 @@ export default {
 		fetches: {
 			fullUrl: true,
 		},
+	},
+	experimental: {
+		ppr: true,
+		dynamicOnHover: true,
+	},
+	eslint: {
+		ignoreDuringBuilds: true,
 	},
 	reactCompiler: true,
 	typescript: {

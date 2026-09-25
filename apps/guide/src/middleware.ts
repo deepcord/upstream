@@ -5,24 +5,12 @@ export function middleware(request: NextRequest) {
 	if (request.nextUrl.pathname.startsWith('/guide/')) {
 		const newUrl = request.nextUrl.clone();
 		newUrl.pathname = newUrl.pathname.replace('/guide/', '/');
-		return NextResponse.redirect(newUrl);
+		return NextResponse.redirect(new URL(newUrl.pathname, request.url));
 	}
 
-	// Redirect old urls to /legacy
-	if (
-		!request.nextUrl.pathname.startsWith('/legacy') &&
-		!request.nextUrl.pathname.startsWith('/voice') &&
-		!request.nextUrl.pathname.startsWith('/v15') &&
-		!request.nextUrl.pathname.startsWith('/rpc')
-	) {
-		const newUrl = request.nextUrl.clone();
-		newUrl.pathname = `/legacy${newUrl.pathname}`;
-		return NextResponse.redirect(newUrl);
-	}
-
-	return NextResponse.next();
+	return NextResponse.redirect(new URL('/legacy', request.url));
 }
 
 export const config = {
-	matcher: ['/((?!_next|api|og|.*\\..*|_static).*)'],
+	matcher: ['/', '/guide/:path*'],
 };

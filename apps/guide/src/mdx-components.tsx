@@ -6,7 +6,7 @@ import { Mermaid } from '@/components/mdx/mermaid';
 
 export function getMDXComponents(components?: MDXComponents): MDXComponents {
 	return {
-		...(defaultMdxComponents as MDXComponents),
+		...defaultMdxComponents,
 		Popup,
 		PopupContent,
 		PopupTrigger,

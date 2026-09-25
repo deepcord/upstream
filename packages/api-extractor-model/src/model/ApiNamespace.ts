@@ -15,8 +15,7 @@ import { ApiReleaseTagMixin, type IApiReleaseTagMixinOptions } from '../mixins/A
  * @public
  */
 export interface IApiNamespaceOptions
-	extends
-		IApiItemContainerMixinOptions,
+	extends IApiItemContainerMixinOptions,
 		IApiNameMixinOptions,
 		IApiReleaseTagMixinOptions,
 		IApiDeclaredItemOptions,

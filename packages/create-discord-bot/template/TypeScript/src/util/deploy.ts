@@ -1,7 +1,8 @@
 import process from 'node:process';
+import { URL } from 'node:url';
 import { API } from '@discordjs/core/http-only';
 import { REST } from 'discord.js';
-import { loadCommands } from './loaders.ts';
+import { loadCommands } from './loaders.[REPLACE_IMPORT_EXT]';
 
 const commands = await loadCommands(new URL('../commands/', import.meta.url));
 const commandData = [...commands.values()].map((command) => command.data);

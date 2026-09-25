@@ -23,8 +23,7 @@ import {
  * @public
  */
 export interface IApiMethodOptions
-	extends
-		IApiNameMixinOptions,
+	extends IApiNameMixinOptions,
 		IApiAbstractMixinOptions,
 		IApiOptionalMixinOptions,
 		IApiParameterListMixinOptions,

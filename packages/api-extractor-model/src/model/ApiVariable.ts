@@ -22,8 +22,7 @@ import type { DeserializerContext } from './DeserializerContext.js';
  * @public
  */
 export interface IApiVariableOptions
-	extends
-		IApiNameMixinOptions,
+	extends IApiNameMixinOptions,
 		IApiReleaseTagMixinOptions,
 		IApiReadonlyMixinOptions,
 		IApiDeclaredItemOptions,

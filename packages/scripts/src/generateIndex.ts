@@ -1,6 +1,6 @@
 import { stat, mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import process from 'node:process';
+import { cwd } from 'node:process';
 import {
 	type ApiItem,
 	ApiPackage,
@@ -151,13 +151,13 @@ export async function writeIndexToFileSystem(
 	const dir = 'searchIndex';
 
 	try {
-		(await stat(join(process.cwd(), 'public', dir))).isDirectory();
+		(await stat(join(cwd(), 'public', dir))).isDirectory();
 	} catch {
-		await mkdir(join(process.cwd(), 'public', dir));
+		await mkdir(join(cwd(), 'public', dir));
 	}
 
 	await writeFile(
-		join(process.cwd(), 'public', dir, `${packageName}-${tag}-index.json`),
+		join(cwd(), 'public', dir, `${packageName}-${tag}-index.json`),
 		JSON.stringify(members, undefined, 2),
 	);
 }
@@ -167,10 +167,7 @@ export async function generateAllIndices({
 	fetchPackageVersionDocs = fetchVersionDocs,
 	writeToFile = true,
 } = {}) {
-	const indices: {
-		data: ReturnType<typeof visitNodes>;
-		index: string;
-	}[] = [];
+	const indices: Record<any, any>[] = [];
 
 	for (const pkg of PACKAGES) {
 		const versions = await fetchPackageVersions(pkg);

@@ -108,10 +108,9 @@ export class Collector {
 	public constructor(options: ICollectorOptions) {
 		this.packageJsonLookup = new PackageJsonLookup();
 
-		const { program, extractorConfig, sourceMapper, messageRouter } = options;
-		this._program = program;
-		this.extractorConfig = extractorConfig;
-		this.sourceMapper = sourceMapper;
+		this._program = options.program;
+		this.extractorConfig = options.extractorConfig;
+		this.sourceMapper = options.sourceMapper;
 
 		const entryPoints: IConfigEntryPoint[] = [
 			this.extractorConfig.mainEntryPointFilePath,
@@ -119,7 +118,7 @@ export class Collector {
 		];
 
 		const workingPackageEntryPoints: IWorkingPackageEntryPoint[] = entryPoints.map((entryPoint) => {
-			const sourceFile: ts.SourceFile | undefined = program.getSourceFile(entryPoint.filePath);
+			const sourceFile: ts.SourceFile | undefined = options.program.getSourceFile(entryPoint.filePath);
 
 			if (!sourceFile) {
 				throw new Error('Unable to load file: ' + entryPoint.filePath);
@@ -141,10 +140,10 @@ export class Collector {
 			entryPoints: workingPackageEntryPoints,
 		});
 
-		this.messageRouter = messageRouter;
+		this.messageRouter = options.messageRouter;
 
-		this.program = program;
-		this.typeChecker = program.getTypeChecker();
+		this.program = options.program;
+		this.typeChecker = options.program.getTypeChecker();
 		this.globalVariableAnalyzer = TypeScriptInternals.getGlobalVariableAnalyzer(this.program);
 
 		this._tsdocParser = new tsdoc.TSDocParser(this.extractorConfig.tsdocConfiguration);
@@ -494,7 +493,7 @@ export class Collector {
 	private _createCollectorEntity(
 		astEntity: AstEntity,
 		entryPoint: IWorkingPackageEntryPoint,
-		exportName?: string,
+		exportName?: string | undefined,
 		parent?: CollectorEntity,
 	): void {
 		let entity: CollectorEntity | undefined = this._entitiesByAstEntity.get(astEntity);
@@ -957,8 +956,10 @@ export class Collector {
 				declaration,
 				ts.SyntaxKind.VariableStatement,
 			) as ts.VariableStatement | undefined;
-			// For a compound declaration, fall back to looking for C instead of A
-			if (statement?.declarationList.declarations.length === 1) {
+			if (
+				statement !== undefined && // For a compound declaration, fall back to looking for C instead of A
+				statement.declarationList.declarations.length === 1
+			) {
 				nodeForComment = statement;
 			}
 		}

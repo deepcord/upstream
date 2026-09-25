@@ -8,5 +8,5 @@
 	"editor.trimAutoWhitespace": false,
 	"files.insertFinalNewline": true,
 	"files.eol": "\n",
-	"deno.enable": true
+	"deno.enable": "[REPLACE_BOOL]"
 }

@@ -32,8 +32,7 @@ import { HeritageType } from './HeritageType.js';
  * @public
  */
 export interface IApiClassOptions
-	extends
-		IApiItemContainerMixinOptions,
+	extends IApiItemContainerMixinOptions,
 		IApiNameMixinOptions,
 		IApiAbstractMixinOptions,
 		IApiReleaseTagMixinOptions,
@@ -49,7 +48,10 @@ export interface IExcerptTokenRangeWithTypeParameters extends IExcerptTokenRange
 }
 
 export interface IApiClassJson
-	extends IApiDeclaredItemJson, IApiAbstractMixinJson, IApiTypeParameterListMixinJson, IApiExportedMixinJson {
+	extends IApiDeclaredItemJson,
+		IApiAbstractMixinJson,
+		IApiTypeParameterListMixinJson,
+		IApiExportedMixinJson {
 	extendsTokenRange?: IExcerptTokenRangeWithTypeParameters | undefined;
 	implementsTokenRanges: IExcerptTokenRangeWithTypeParameters[];
 }

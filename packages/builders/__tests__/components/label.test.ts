@@ -1,9 +1,4 @@
-import type {
-	APIFileUploadComponent,
-	APILabelComponent,
-	APIStringSelectComponent,
-	APITextInputComponent,
-} from 'discord-api-types/v10';
+import type { APILabelComponent, APIStringSelectComponent, APITextInputComponent } from 'discord-api-types/v10';
 import { ComponentType, TextInputStyle } from 'discord-api-types/v10';
 import { describe, test, expect } from 'vitest';
 import { LabelBuilder } from '../../src/index.js';
@@ -32,14 +27,6 @@ describe('Label components', () => {
 					)
 					.toJSON(),
 			).not.toThrow();
-
-			expect(() =>
-				new LabelBuilder()
-					.setLabel('label')
-					.setId(5)
-					.setFileUploadComponent((fileUpload) => fileUpload.setCustomId('test'))
-					.toJSON(),
-			).not.toThrow();
 		});
 
 		test('GIVEN invalid fields THEN build does throw', () => {
@@ -51,13 +38,6 @@ describe('Label components', () => {
 				new LabelBuilder()
 					.setLabel('l'.repeat(1_000))
 					.setStringSelectMenuComponent((stringSelectMenu) => stringSelectMenu)
-					.toJSON(),
-			).toThrow();
-
-			expect(() =>
-				new LabelBuilder()
-					.setLabel('l'.repeat(1_000))
-					.setFileUploadComponent((fileUpload) => fileUpload)
 					.toJSON(),
 			).toThrow();
 		});
@@ -88,19 +68,6 @@ describe('Label components', () => {
 					],
 					required: true,
 				} satisfies APIStringSelectComponent,
-				label: 'label',
-				description: 'description',
-				id: 5,
-			} satisfies APILabelComponent;
-
-			const labelWithFileUploadData = {
-				type: ComponentType.Label,
-				component: {
-					type: ComponentType.FileUpload,
-					custom_id: 'custom_id',
-					min_values: 9,
-					required: true,
-				} satisfies APIFileUploadComponent,
 				label: 'label',
 				description: 'description',
 				id: 5,
@@ -137,15 +104,6 @@ describe('Label components', () => {
 					.setId(5)
 					.toJSON(),
 			).toEqual(labelWithStringSelectData);
-
-			expect(
-				new LabelBuilder()
-					.setFileUploadComponent((fileUpload) => fileUpload.setCustomId('custom_id').setMinValues(9).setRequired())
-					.setLabel('label')
-					.setDescription('description')
-					.setId(5)
-					.toJSON(),
-			).toEqual(labelWithFileUploadData);
 		});
 	});
 });

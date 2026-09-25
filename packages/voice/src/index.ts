@@ -7,7 +7,6 @@ export {
 	Networking,
 	type ConnectionData,
 	type ConnectionOptions,
-	type NetworkingOptions,
 	type NetworkingState,
 	type NetworkingResumingState,
 	type NetworkingSelectingProtocolState,
@@ -20,12 +19,7 @@ export {
 	VoiceUDPSocket,
 	VoiceWebSocket,
 	type SocketConfig,
-	type BinaryWebSocketMessage,
 	DAVESession,
-	type SessionMethods,
-	type DAVESessionOptions,
-	type TransitionResult,
-	type ProposalsResult,
 } from './networking/index.js';
 
 export {

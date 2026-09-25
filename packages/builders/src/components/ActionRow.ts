@@ -34,9 +34,8 @@ import { StringSelectMenuBuilder } from './selectMenu/StringSelectMenu.js';
 import { UserSelectMenuBuilder } from './selectMenu/UserSelectMenu.js';
 import { TextInputBuilder } from './textInput/TextInput.js';
 
-export interface ActionRowBuilderData extends Partial<
-	Omit<APIActionRowComponent<APIComponentInActionRow>, 'components'>
-> {
+export interface ActionRowBuilderData
+	extends Partial<Omit<APIActionRowComponent<APIComponentInActionRow>, 'components'>> {
 	components: AnyActionRowComponentBuilder[];
 }
 

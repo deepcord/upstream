@@ -1,16 +1,10 @@
+/* eslint-disable no-restricted-globals */
 // Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT license.
 // See LICENSE in the project root for license information.
 
 import * as os from 'node:os';
 import * as path from 'node:path';
-import process from 'node:process';
-import {
-	PackageJsonLookup,
-	FileSystem,
-	type IPackageJson,
-	Path,
-	AlreadyReportedError,
-} from '@rushstack/node-core-library';
+import { PackageJsonLookup, FileSystem, type IPackageJson, Path } from '@rushstack/node-core-library';
 import {
 	CommandLineAction,
 	type CommandLineStringParameter,
@@ -24,17 +18,15 @@ import type { ApiExtractorCommandLine } from './ApiExtractorCommandLine.js';
 export class RunAction extends CommandLineAction {
 	private readonly _configFileParameter: CommandLineStringParameter;
 
-	private readonly _localFlag: CommandLineFlagParameter;
+	private readonly _localParameter: CommandLineFlagParameter;
 
-	private readonly _verboseFlag: CommandLineFlagParameter;
+	private readonly _verboseParameter: CommandLineFlagParameter;
 
 	private readonly _diagnosticsParameter: CommandLineFlagParameter;
 
-	private readonly _typescriptCompilerFolderParameter: CommandLineStringParameter;
+	private readonly _typescriptCompilerFolder: CommandLineStringParameter;
 
 	private readonly _minify: CommandLineFlagParameter;
-
-	private readonly _printApiReportDiffFlag: CommandLineFlagParameter;
 
 	public constructor(_parser: ApiExtractorCommandLine) {
 		super({
@@ -50,7 +42,7 @@ export class RunAction extends CommandLineAction {
 			description: `Use the specified ${ExtractorConfig.FILENAME} file path, rather than guessing its location`,
 		});
 
-		this._localFlag = this.defineFlagParameter({
+		this._localParameter = this.defineFlagParameter({
 			parameterLongName: '--local',
 			parameterShortName: '-l',
 			description:
@@ -60,7 +52,7 @@ export class RunAction extends CommandLineAction {
 				' report file is automatically copied in a local build.',
 		});
 
-		this._verboseFlag = this.defineFlagParameter({
+		this._verboseParameter = this.defineFlagParameter({
 			parameterLongName: '--verbose',
 			parameterShortName: '-v',
 			description: 'Show additional informational messages in the output.',
@@ -79,7 +71,7 @@ export class RunAction extends CommandLineAction {
 				'  This flag also enables the "--verbose" flag.',
 		});
 
-		this._typescriptCompilerFolderParameter = this.defineStringParameter({
+		this._typescriptCompilerFolder = this.defineStringParameter({
 			parameterLongName: '--typescript-compiler-folder',
 			argumentName: 'PATH',
 			description:
@@ -89,21 +81,13 @@ export class RunAction extends CommandLineAction {
 				' "--typescriptCompilerFolder" option to specify the folder path where you installed the TypeScript package,' +
 				" and API Extractor's compiler will use those system typings instead.",
 		});
-
-		this._printApiReportDiffFlag = this.defineFlagParameter({
-			parameterLongName: '--print-api-report-diff',
-			description:
-				'If provided, then any differences between the actual and expected API reports will be ' +
-				'printed on the console. Note that the diff is not printed if the expected API report file has not been ' +
-				'created yet.',
-		});
 	}
 
 	protected override async onExecuteAsync(): Promise<void> {
 		const lookup: PackageJsonLookup = new PackageJsonLookup();
 		let configFilename: string;
 
-		let typescriptCompilerFolder: string | undefined = this._typescriptCompilerFolderParameter.value;
+		let typescriptCompilerFolder: string | undefined = this._typescriptCompilerFolder.value;
 		if (typescriptCompilerFolder) {
 			typescriptCompilerFolder = path.normalize(typescriptCompilerFolder);
 
@@ -114,17 +98,17 @@ export class RunAction extends CommandLineAction {
 					: undefined;
 				if (!typescriptCompilerPackageJson) {
 					throw new Error(
-						`The path specified in the ${this._typescriptCompilerFolderParameter.longName} parameter is not a package.`,
+						`The path specified in the ${this._typescriptCompilerFolder.longName} parameter is not a package.`,
 					);
 				} else if (typescriptCompilerPackageJson.name !== 'typescript') {
 					throw new Error(
-						`The path specified in the ${this._typescriptCompilerFolderParameter.longName} parameter is not a TypeScript` +
+						`The path specified in the ${this._typescriptCompilerFolder.longName} parameter is not a TypeScript` +
 							' compiler package.',
 					);
 				}
 			} else {
 				throw new Error(
-					`The path specified in the ${this._typescriptCompilerFolderParameter.longName} parameter does not exist.`,
+					`The path specified in the ${this._typescriptCompilerFolder.longName} parameter does not exist.`,
 				);
 			}
 		}
@@ -157,24 +141,23 @@ export class RunAction extends CommandLineAction {
 		}
 
 		const extractorResult: ExtractorResult = Extractor.invoke(extractorConfig, {
-			localBuild: this._localFlag.value,
+			localBuild: this._localParameter.value,
 			docModelMinify: this._minify.value,
-			showVerboseMessages: this._verboseFlag.value,
+			showVerboseMessages: this._verboseParameter.value,
 			showDiagnostics: this._diagnosticsParameter.value,
 			typescriptCompilerFolder,
-			printApiReportDiff: this._printApiReportDiffFlag.value,
 		});
 
 		if (extractorResult.succeeded) {
 			console.log(os.EOL + 'API Extractor completed successfully');
 		} else {
+			process.exitCode = 1;
+
 			if (extractorResult.errorCount > 0) {
 				console.log(os.EOL + colors.red('API Extractor completed with errors'));
 			} else {
 				console.log(os.EOL + colors.yellow('API Extractor completed with warnings'));
 			}
-
-			throw new AlreadyReportedError();
 		}
 	}
 }

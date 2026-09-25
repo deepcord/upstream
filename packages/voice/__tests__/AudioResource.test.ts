@@ -65,17 +65,13 @@ describe('createAudioResource', () => {
 	});
 
 	test('Only infers type if not explicitly given', () => {
-		const resource = createAudioResource(new opus.Encoder({ rate: 48_000, channels: 2, frameSize: 960 }), {
-			inputType: StreamType.Arbitrary,
-		});
+		const resource = createAudioResource(new opus.Encoder(), { inputType: StreamType.Arbitrary });
 		expect(findPipeline).toHaveBeenCalledWith(StreamType.Arbitrary, NO_CONSTRAINT);
 		expect(resource.volume).toBeUndefined();
 	});
 
 	test('Infers from opus.Encoder', () => {
-		const resource = createAudioResource(new opus.Encoder({ rate: 48_000, channels: 2, frameSize: 960 }), {
-			inlineVolume: true,
-		});
+		const resource = createAudioResource(new opus.Encoder(), { inlineVolume: true });
 		expect(findPipeline).toHaveBeenCalledWith(StreamType.Opus, VOLUME_CONSTRAINT);
 		expect(resource.volume).toBeInstanceOf(VolumeTransformer);
 		expect(resource.encoder).toBeInstanceOf(opus.Encoder);
@@ -95,7 +91,7 @@ describe('createAudioResource', () => {
 	});
 
 	test('Infers from opus.Decoder', () => {
-		const resource = createAudioResource(new opus.Decoder({ rate: 48_000, channels: 2, frameSize: 960 }));
+		const resource = createAudioResource(new opus.Decoder());
 		expect(findPipeline).toHaveBeenCalledWith(StreamType.Raw, NO_CONSTRAINT);
 		expect(resource.volume).toBeUndefined();
 	});

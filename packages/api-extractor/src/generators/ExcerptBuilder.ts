@@ -17,22 +17,16 @@ import type { DeclarationReferenceGenerator } from './DeclarationReferenceGenera
 /**
  * Used to provide ExcerptBuilder with a list of nodes whose token range we want to capture.
  */
-export interface IExcerptBuilderNodeTransform {
+export interface IExcerptBuilderNodeToCapture {
 	/**
-	 * A token range whose startIndex/endIndex will be overwritten with the indexes for the
-	 * tokens corresponding to IExcerptBuilderNodeTransform.node
+	 * The node to capture
 	 */
-	captureTokenRange?: IExcerptTokenRange;
-
+	node: ts.Node | undefined;
 	/**
-	 * The node to process
+	 * The token range whose startIndex/endIndex will be overwritten with the indexes for the
+	 * tokens corresponding to IExcerptBuilderNodeToCapture.node
 	 */
-	node: ts.Node;
-
-	/**
-	 * +   * Text that will replace the text of the given node during emit.
-	 */
-	replacementText?: string;
+	tokenRange: IExcerptTokenRange;
 }
 
 /**
@@ -65,7 +59,7 @@ interface IBuildSpanState {
 	 */
 	stopBeforeChildKind: ts.SyntaxKind | undefined;
 
-	transformsByNode: Map<ts.Node, IExcerptBuilderNodeTransform>;
+	tokenRangesByNode: Map<ts.Node, IExcerptTokenRange>;
 }
 
 export class ExcerptBuilder {
@@ -92,12 +86,12 @@ export class ExcerptBuilder {
 	 *
 	 * @param excerptTokens - The target token list to append to
 	 * @param astDeclaration - The declaration
-	 * @param nodeTransforms - A list of child nodes whose token ranges we want to capture
+	 * @param nodesToCapture - A list of child nodes whose token ranges we want to capture
 	 */
 	public static addDeclaration(
 		excerptTokens: IExcerptToken[],
 		astDeclaration: AstDeclaration,
-		nodeTransforms: IExcerptBuilderNodeTransform[],
+		nodesToCapture: IExcerptBuilderNodeToCapture[],
 		referenceGenerator: DeclarationReferenceGenerator,
 		entryPoint: IWorkingPackageEntryPoint,
 	): void {
@@ -120,15 +114,10 @@ export class ExcerptBuilder {
 
 		const span: Span = new Span(astDeclaration.declaration);
 
-		const transformsByNode: Map<ts.Node, IExcerptBuilderNodeTransform> = new Map<
-			ts.Node,
-			IExcerptBuilderNodeTransform
-		>();
-		const captureTokenRanges: IExcerptTokenRange[] = [];
-		for (const nodeTransform of nodeTransforms || []) {
-			transformsByNode.set(nodeTransform.node, nodeTransform);
-			if (nodeTransform.captureTokenRange) {
-				captureTokenRanges.push(nodeTransform.captureTokenRange);
+		const tokenRangesByNode: Map<ts.Node, IExcerptTokenRange> = new Map<ts.Node, IExcerptTokenRange>();
+		for (const excerpt of nodesToCapture || []) {
+			if (excerpt.node) {
+				tokenRangesByNode.set(excerpt.node, excerpt.tokenRange);
 			}
 		}
 
@@ -137,10 +126,10 @@ export class ExcerptBuilder {
 			referenceGenerator,
 			startingNode: span.node,
 			stopBeforeChildKind,
-			transformsByNode,
+			tokenRangesByNode,
 			lastAppendedTokenIsSeparator: false,
 		});
-		ExcerptBuilder._condenseTokens(excerptTokens, captureTokenRanges);
+		ExcerptBuilder._condenseTokens(excerptTokens, [...tokenRangesByNode.values()]);
 	}
 
 	public static createEmptyTokenRange(): IExcerptTokenRange {
@@ -181,9 +170,6 @@ export class ExcerptBuilder {
 		);
 	}
 
-	/**
-	 * @returns false if we encountered a token that causes iteration to stop.
-	 */
 	private static _buildSpan(excerptTokens: IExcerptToken[], span: Span, state: IBuildSpanState): boolean {
 		if (span.kind === ts.SyntaxKind.JSDocComment) {
 			// Discard any comments
@@ -191,31 +177,10 @@ export class ExcerptBuilder {
 		}
 
 		// Can this node start a excerpt?
-		const transform: IExcerptBuilderNodeTransform | undefined = state.transformsByNode.get(span.node);
-
-		let captureTokenRange: IExcerptTokenRange | undefined;
-
-		if (transform) {
-			captureTokenRange = transform.captureTokenRange;
-			if (transform.replacementText !== undefined) {
-				excerptTokens.push({
-					kind: ExcerptTokenKind.Content,
-					text: transform.replacementText,
-				});
-				state.lastAppendedTokenIsSeparator = false;
-
-				if (captureTokenRange) {
-					captureTokenRange.startIndex = excerptTokens.length;
-					captureTokenRange.endIndex = captureTokenRange.startIndex + 1;
-				}
-
-				return true;
-			}
-		}
-
+		const capturedTokenRange: IExcerptTokenRange | undefined = state.tokenRangesByNode.get(span.node);
 		let excerptStartIndex = 0;
 
-		if (captureTokenRange) {
+		if (capturedTokenRange) {
 			// We will assign capturedTokenRange.startIndex to be the index of the next token to be appended
 			excerptStartIndex = excerptTokens.length;
 		}
@@ -270,8 +235,8 @@ export class ExcerptBuilder {
 		}
 
 		// Are we building a excerpt?  If so, set its range
-		if (captureTokenRange) {
-			captureTokenRange.startIndex = excerptStartIndex;
+		if (capturedTokenRange) {
+			capturedTokenRange.startIndex = excerptStartIndex;
 
 			// We will assign capturedTokenRange.startIndex to be the index after the last token
 			// that was appended so far. However, if the last appended token was a separator, omit
@@ -281,7 +246,7 @@ export class ExcerptBuilder {
 				excerptEndIndex--;
 			}
 
-			captureTokenRange.endIndex = excerptEndIndex;
+			capturedTokenRange.endIndex = excerptEndIndex;
 		}
 
 		return true;
@@ -336,7 +301,8 @@ export class ExcerptBuilder {
 				// There are two types of merges that can occur. We only perform these merges if they are
 				// compatible with all of our token ranges.
 				if (
-					prevPrevToken?.kind === ExcerptTokenKind.Reference &&
+					prevPrevToken &&
+					prevPrevToken.kind === ExcerptTokenKind.Reference &&
 					prevToken.kind === ExcerptTokenKind.Content &&
 					prevToken.text.trim() === '.' &&
 					currentToken.kind === ExcerptTokenKind.Reference &&

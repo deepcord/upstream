@@ -8,7 +8,6 @@ import type { VoiceReceivePayload, VoiceSpeakingFlags } from 'discord-api-types/
 import { VoiceEncryptionMode, VoiceOpcodes } from 'discord-api-types/voice/v8';
 import type { CloseEvent } from 'ws';
 import * as secretbox from '../util/Secretbox';
-import { RTP_OPUS_PAYLOAD_TYPE } from '../util/constants';
 import { noop } from '../util/util';
 import { DAVESession, getMaxProtocolVersion } from './DAVESession';
 import { VoiceUDPSocket } from './VoiceUDPSocket';
@@ -364,6 +363,7 @@ export class Networking extends EventEmitter {
 	 */
 	private createDaveSession(protocolVersion: number) {
 		if (
+			getMaxProtocolVersion() === null ||
 			this.options.daveEncryption === false ||
 			(this.state.code !== NetworkingStatusCode.SelectingProtocol &&
 				this.state.code !== NetworkingStatusCode.Ready &&
@@ -412,7 +412,7 @@ export class Networking extends EventEmitter {
 					user_id: this.state.connectionOptions.userId,
 					session_id: this.state.connectionOptions.sessionId,
 					token: this.state.connectionOptions.token,
-					max_dave_protocol_version: this.options.daveEncryption === false ? 0 : getMaxProtocolVersion(),
+					max_dave_protocol_version: this.options.daveEncryption === false ? 0 : (getMaxProtocolVersion() ?? 0),
 				},
 			});
 			this.state = {
@@ -746,7 +746,7 @@ export class Networking extends EventEmitter {
 	private createAudioPacket(opusPacket: Buffer, connectionData: ConnectionData, daveSession?: DAVESession) {
 		const rtpHeader = Buffer.alloc(12);
 		rtpHeader[0] = 0x80;
-		rtpHeader[1] = RTP_OPUS_PAYLOAD_TYPE;
+		rtpHeader[1] = 0x78;
 
 		const { sequence, timestamp, ssrc } = connectionData;
 

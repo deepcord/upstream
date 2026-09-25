@@ -37,7 +37,7 @@ export default defineConfig({
 			formats: ['es'],
 			name: 'ui',
 		},
-		rolldownOptions: {
+		rollupOptions: {
 			external: [
 				'react',
 				'react-dom',

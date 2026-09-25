@@ -5,7 +5,7 @@ import { Buffer } from 'node:buffer';
 import { once } from 'node:events';
 import process from 'node:process';
 import { Readable } from 'node:stream';
-import { describe, test, expect, vitest, type MockedFunction, beforeEach, afterEach } from 'vitest';
+import { describe, test, expect, vitest, type Mock, beforeEach, afterEach } from 'vitest';
 import { addAudioPlayer, deleteAudioPlayer } from '../src/DataStore';
 import { VoiceConnection, VoiceConnectionStatus } from '../src/VoiceConnection';
 import type { AudioPlayer } from '../src/audio/AudioPlayer';
@@ -252,9 +252,7 @@ describe('State transitions', () => {
 		expect(connection.dispatchAudio).toHaveBeenCalledTimes(6);
 		await wait();
 		player['_stepPrepare']();
-		const prepareAudioPacket = connection.prepareAudioPacket as unknown as MockedFunction<
-			typeof connection.prepareAudioPacket
-		>;
+		const prepareAudioPacket = connection.prepareAudioPacket as unknown as Mock<typeof connection.prepareAudioPacket>;
 		expect(prepareAudioPacket).toHaveBeenCalledTimes(6);
 		expect(prepareAudioPacket.mock.calls[5]![0]).toEqual(silence().next().value);
 
@@ -309,9 +307,7 @@ describe('State transitions', () => {
 
 		await wait();
 		expect(player.checkPlayable()).toEqual(false);
-		const prepareAudioPacket = connection.prepareAudioPacket as unknown as MockedFunction<
-			typeof connection.prepareAudioPacket
-		>;
+		const prepareAudioPacket = connection.prepareAudioPacket as unknown as Mock<typeof connection.prepareAudioPacket>;
 		expect(prepareAudioPacket).toHaveBeenCalledTimes(5);
 
 		expect(player.state.status).toEqual(AudioPlayerStatus.Idle);
@@ -342,9 +338,7 @@ describe('State transitions', () => {
 		expect(addAudioPlayer).toBeCalledTimes(1);
 		expect(player.checkPlayable()).toEqual(true);
 
-		const prepareAudioPacket = connection.prepareAudioPacket as unknown as MockedFunction<
-			typeof connection.prepareAudioPacket
-		>;
+		const prepareAudioPacket = connection.prepareAudioPacket as unknown as Mock<typeof connection.prepareAudioPacket>;
 
 		// Run through a few packet cycles
 		for (let index = 1; index <= 5; index++) {

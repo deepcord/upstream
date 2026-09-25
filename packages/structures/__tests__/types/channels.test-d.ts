@@ -1,81 +1,79 @@
 import type { ChannelType, GuildChannelType, GuildTextChannelType, ThreadChannelType } from 'discord-api-types/v10';
-import { expectTypeOf } from 'vitest';
-import type { Channel } from '../../src/channels/Channel.js';
+import { expectNever, expectType } from 'tsd';
+import type { Channel } from '../../src/index.js';
 
 declare const channel: Channel;
 
 if (channel.isGuildBased()) {
-	expectTypeOf(channel.guildId).toBeString();
-	expectTypeOf(channel.type).toEqualTypeOf<GuildChannelType>();
+	expectType<string>(channel.guildId);
+	expectType<GuildChannelType>(channel.type);
 
 	if (channel.isDMBased()) {
-		expectTypeOf(channel).toBeNever();
+		expectNever(channel);
 	}
 
 	if (channel.isPermissionCapable()) {
-		expectTypeOf(channel.type).toEqualTypeOf<
-			Exclude<GuildChannelType, ChannelType.GuildDirectory | ThreadChannelType>
-		>();
+		expectType<Exclude<GuildChannelType, ChannelType.GuildDirectory | ThreadChannelType>>(channel.type);
 	}
 
 	if (channel.isTextBased()) {
-		expectTypeOf(channel.type).toEqualTypeOf<GuildTextChannelType>();
+		expectType<GuildTextChannelType>(channel.type);
 	}
 
 	if (channel.isWebhookCapable()) {
-		expectTypeOf(channel.type).toEqualTypeOf<
-			ChannelType.GuildForum | ChannelType.GuildMedia | Exclude<GuildTextChannelType, ThreadChannelType>
-		>();
+		expectType<ChannelType.GuildForum | ChannelType.GuildMedia | Exclude<GuildTextChannelType, ThreadChannelType>>(
+			channel.type,
+		);
 	}
 
 	if (channel.isThread()) {
-		expectTypeOf(channel.type).toEqualTypeOf<ThreadChannelType>();
+		expectType<ThreadChannelType>(channel.type);
 	}
 
 	if (channel.isThreadOnly()) {
-		expectTypeOf(channel.type).toEqualTypeOf<ChannelType.GuildForum | ChannelType.GuildMedia>();
+		expectType<ChannelType.GuildForum | ChannelType.GuildMedia>(channel.type);
 	}
 
 	if (channel.isVoiceBased()) {
-		expectTypeOf(channel.type).toEqualTypeOf<ChannelType.GuildStageVoice | ChannelType.GuildVoice>();
+		expectType<ChannelType.GuildStageVoice | ChannelType.GuildVoice>(channel.type);
 		if (!channel.isTextBased()) {
-			expectTypeOf(channel).toBeNever();
+			expectNever(channel);
 		}
 
 		if (!channel.isWebhookCapable()) {
-			expectTypeOf(channel).toBeNever();
+			expectNever(channel);
 		}
 	}
 }
 
 if (channel.isDMBased()) {
-	expectTypeOf(channel.type).toEqualTypeOf<ChannelType.DM | ChannelType.GroupDM>();
+	expectType<ChannelType.DM | ChannelType.GroupDM>(channel.type);
 
 	if (channel.isGuildBased()) {
-		expectTypeOf(channel).toBeNever();
+		expectNever(channel);
 	}
 
 	if (channel.isPermissionCapable()) {
-		expectTypeOf(channel).toBeNever();
+		expectNever(channel);
 	}
 
 	if (channel.isWebhookCapable()) {
-		expectTypeOf(channel).toBeNever();
+		expectNever(channel);
 	}
 
 	if (channel.isVoiceBased()) {
-		expectTypeOf(channel).toBeNever();
+		expectNever(channel);
 	}
 
 	if (channel.isThread()) {
-		expectTypeOf(channel).toBeNever();
+		expectNever(channel);
 	}
 
 	if (channel.isThreadOnly()) {
-		expectTypeOf(channel).toBeNever();
+		expectNever(channel);
 	}
 
 	if (channel.isTextBased()) {
-		expectTypeOf(channel.type).toEqualTypeOf<ChannelType.DM | ChannelType.GroupDM>();
+		expectType<ChannelType.DM | ChannelType.GroupDM>(channel.type);
 	}
 }

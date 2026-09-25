@@ -3,14 +3,13 @@
 import { Loader2Icon } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { Select, SelectList, SelectOption, SelectTrigger } from '@/components/ui/Select';
-import type { EntryPoint } from '@/util/fetchEntryPoints';
 import { parseDocsPathParams } from '@/util/parseDocsPathParams';
 
 export function EntryPointSelect({
 	entryPoints,
 	isLoading,
 }: {
-	readonly entryPoints: EntryPoint[];
+	readonly entryPoints: { readonly entryPoint: string }[];
 	readonly isLoading: boolean;
 }) {
 	const router = useRouter();

@@ -1,7 +1,6 @@
 import { type APIInvite, type APIExtendedInvite, RouteBases } from 'discord-api-types/v10';
 import { Structure } from '../Structure.js';
-import { dateToDiscordISOTimestamp } from '../utils/optimization.js';
-import { kData, kExpiresTimestamp, kCreatedTimestamp } from '../utils/symbols.js';
+import { kData, kExpiresTimestamp, kCreatedTimestamp, kPatch } from '../utils/symbols.js';
 import type { Partialize } from '../utils/types.js';
 
 export interface APIActualInvite extends APIInvite, Partial<Omit<APIExtendedInvite, keyof APIInvite>> {}
@@ -46,6 +45,16 @@ export class Invite<Omitted extends keyof APIActualInvite | '' = 'created_at' | 
 	public constructor(data: Partialize<APIActualInvite, Omitted>) {
 		super(data);
 		this.optimizeData(data);
+	}
+
+	/**
+	 * {@inheritDoc Structure.[kPatch]}
+	 *
+	 * @internal
+	 */
+	public override [kPatch](data: Partial<APIActualInvite>) {
+		super[kPatch](data);
+		return this;
 	}
 
 	/**
@@ -122,7 +131,7 @@ export class Invite<Omitted extends keyof APIActualInvite | '' = 'created_at' | 
 	/**
 	 * The time the invite will expire at
 	 */
-	public get expiresDate() {
+	public get expiresAt() {
 		const expiresTimestamp = this.expiresTimestamp;
 		return expiresTimestamp ? new Date(expiresTimestamp) : null;
 	}
@@ -165,7 +174,7 @@ export class Invite<Omitted extends keyof APIActualInvite | '' = 'created_at' | 
 	/**
 	 * The time the invite was created at
 	 */
-	public get createdDate() {
+	public get createdAt() {
 		const createdTimestamp = this.createdTimestamp;
 		return createdTimestamp ? new Date(createdTimestamp) : null;
 	}
@@ -192,11 +201,11 @@ export class Invite<Omitted extends keyof APIActualInvite | '' = 'created_at' | 
 	public override toJSON() {
 		const clone = super.toJSON();
 		if (this[kExpiresTimestamp]) {
-			clone.expires_at = dateToDiscordISOTimestamp(new Date(this[kExpiresTimestamp]));
+			clone.expires_at = new Date(this[kExpiresTimestamp]).toISOString();
 		}
 
 		if (this[kCreatedTimestamp]) {
-			clone.created_at = dateToDiscordISOTimestamp(new Date(this[kCreatedTimestamp]));
+			clone.created_at = new Date(this[kCreatedTimestamp]).toISOString();
 		}
 
 		return clone;

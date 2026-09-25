@@ -14,7 +14,10 @@ import { type IApiReleaseTagMixinOptions, ApiReleaseTagMixin } from '../mixins/A
  * @public
  */
 export interface IApiEventOptions
-	extends IApiNameMixinOptions, IApiParameterListMixinOptions, IApiReleaseTagMixinOptions, IApiDeclaredItemOptions {}
+	extends IApiNameMixinOptions,
+		IApiParameterListMixinOptions,
+		IApiReleaseTagMixinOptions,
+		IApiDeclaredItemOptions {}
 
 /**
  * Represents a TypeScript event declaration that belongs to an `ApiClass`.

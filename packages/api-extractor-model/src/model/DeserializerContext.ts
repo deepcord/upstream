@@ -154,11 +154,10 @@ export class DeserializerContext {
 	public readonly tsdocConfiguration: TSDocConfiguration;
 
 	public constructor(options: DeserializerContext) {
-		const { apiJsonFilename, toolPackage, toolVersion, versionToDeserialize, tsdocConfiguration } = options;
-		this.apiJsonFilename = apiJsonFilename;
-		this.toolPackage = toolPackage;
-		this.toolVersion = toolVersion;
-		this.versionToDeserialize = versionToDeserialize;
-		this.tsdocConfiguration = tsdocConfiguration;
+		this.apiJsonFilename = options.apiJsonFilename;
+		this.toolPackage = options.toolPackage;
+		this.toolVersion = options.toolVersion;
+		this.versionToDeserialize = options.versionToDeserialize;
+		this.tsdocConfiguration = options.tsdocConfiguration;
 	}
 }

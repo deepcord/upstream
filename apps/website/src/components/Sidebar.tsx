@@ -12,7 +12,6 @@ import { VersionSelect } from '@/components/VersionSelect';
 import { SidebarHeader as BasSidebarHeader } from '@/components/ui/Sidebar';
 import { buttonStyles } from '@/styles/ui/button';
 import { PACKAGES_WITH_ENTRY_POINTS } from '@/util/constants';
-import type { EntryPoint } from '@/util/fetchEntryPoints';
 
 export function SidebarHeader() {
 	const params = useParams<{
@@ -22,7 +21,7 @@ export function SidebarHeader() {
 
 	const hasEntryPoints = PACKAGES_WITH_ENTRY_POINTS.includes(params.packageName);
 
-	const { data: entryPoints, isLoading: isLoadingEntryPoints } = useQuery<EntryPoint[]>({
+	const { data: entryPoints, isLoading: isLoadingEntryPoints } = useQuery({
 		queryKey: ['entryPoints', params.packageName, params.version],
 		queryFn: async () => {
 			const response = await fetch(`/api/docs/entrypoints?packageName=${params.packageName}&version=${params.version}`);
@@ -44,10 +43,7 @@ export function SidebarHeader() {
 		<BasSidebarHeader className="bg-[#f3f3f4] p-4 dark:bg-[#121214]">
 			<div className="flex flex-col gap-2">
 				<div className="flex place-content-between place-items-center p-1">
-					<Link
-						className="text-xl font-bold"
-						href={`/docs/packages/${params.packageName}/${params.version}${hasEntryPoints ? `/${entryPoints?.[0]?.entryPoint ?? ''}` : ''}`}
-					>
+					<Link className="text-xl font-bold" href={`/docs/packages/${params.packageName}/${params.version}`}>
 						{params.packageName}
 					</Link>
 					<div className="flex place-items-center gap-2">

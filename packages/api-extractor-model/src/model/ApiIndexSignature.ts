@@ -15,8 +15,7 @@ import { type IApiReturnTypeMixinOptions, ApiReturnTypeMixin } from '../mixins/A
  * @public
  */
 export interface IApiIndexSignatureOptions
-	extends
-		IApiParameterListMixinOptions,
+	extends IApiParameterListMixinOptions,
 		IApiReleaseTagMixinOptions,
 		IApiReturnTypeMixinOptions,
 		IApiReadonlyMixinOptions,

@@ -53,7 +53,7 @@ export interface IAstSymbolOptions {
  */
 export class AstSymbol extends AstEntity {
 	/**
-	 * {@inheritdoc AstEntity.localName}
+	 * {@inheritdoc}
 	 */
 	public readonly localName: string; // abstract
 

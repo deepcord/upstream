@@ -12,7 +12,6 @@ import { ReturnNode } from './ReturnNode';
 import { SeeNode } from './SeeNode';
 import { SummaryNode } from './SummaryNode';
 import { TypeParameterNode } from './TypeParameterNode';
-import { UnstableNode } from './UnstableNode';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/Collapsible';
 import { Tab, TabList, TabPanel, Tabs } from './ui/Tabs';
 
@@ -69,10 +68,6 @@ async function MethodBodyNode({
 
 				{method.summary?.deprecatedBlock.length ? (
 					<DeprecatedNode deprecatedBlock={method.summary.deprecatedBlock} version={version} />
-				) : null}
-
-				{method.summary?.unstableBlock?.length ? (
-					<UnstableNode unstableBlock={method.summary.unstableBlock} version={version} />
 				) : null}
 
 				{method.summary?.summarySection.length ? (

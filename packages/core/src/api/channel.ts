@@ -3,6 +3,7 @@
 import { makeURLSearchParams, type RawFile, type RequestData, type REST } from '@discordjs/rest';
 import {
 	Routes,
+	type APIThreadChannel,
 	type RESTDeleteAPIChannelResult,
 	type RESTGetAPIChannelInvitesResult,
 	type RESTGetAPIChannelMessageReactionUsersQuery,
@@ -31,6 +32,7 @@ import {
 	type RESTPostAPIChannelWebhookJSONBody,
 	type RESTPostAPIChannelWebhookResult,
 	type RESTPostAPIGuildForumThreadsJSONBody,
+	type RESTPostAPISendSoundboardSoundResult,
 	type RESTPostAPISoundboardSendSoundJSONBody,
 	type RESTPutAPIChannelPermissionJSONBody,
 	type RESTPutAPIChannelRecipientJSONBody,
@@ -564,7 +566,7 @@ export class ChannelsAPI {
 			body,
 			reason,
 			signal,
-		}) as Promise<RESTPostAPIChannelThreadsResult>;
+		}) as Promise<APIThreadChannel>;
 	}
 
 	/**
@@ -701,11 +703,11 @@ export class ChannelsAPI {
 		body: RESTPostAPISoundboardSendSoundJSONBody,
 		{ auth, signal }: Pick<RequestData, 'auth' | 'signal'> = {},
 	) {
-		await this.rest.post(Routes.sendSoundboardSound(channelId), {
+		return this.rest.post(Routes.sendSoundboardSound(channelId), {
 			auth,
 			body,
 			signal,
-		});
+		}) as Promise<RESTPostAPISendSoundboardSoundResult>;
 	}
 
 	/**

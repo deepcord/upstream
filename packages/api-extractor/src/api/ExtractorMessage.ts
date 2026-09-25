@@ -135,26 +135,16 @@ export class ExtractorMessage {
 	 * @internal
 	 */
 	public constructor(options: IExtractorMessageOptions) {
-		const {
-			category,
-			messageId,
-			text,
-			sourceFilePath,
-			sourceFileLine,
-			sourceFileColumn,
-			properties = {},
-			logLevel = ExtractorLogLevel.None,
-		} = options;
-		this.category = category;
-		this.messageId = messageId;
-		this.text = text;
-		this.sourceFilePath = sourceFilePath;
-		this.sourceFileLine = sourceFileLine;
-		this.sourceFileColumn = sourceFileColumn;
-		this.properties = properties;
+		this.category = options.category;
+		this.messageId = options.messageId;
+		this.text = options.text;
+		this.sourceFilePath = options.sourceFilePath;
+		this.sourceFileLine = options.sourceFileLine;
+		this.sourceFileColumn = options.sourceFileColumn;
+		this.properties = options.properties ?? {};
 
 		this._handled = false;
-		this._logLevel = logLevel;
+		this._logLevel = options.logLevel ?? ExtractorLogLevel.None;
 	}
 
 	/**

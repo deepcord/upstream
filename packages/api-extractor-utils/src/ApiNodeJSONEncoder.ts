@@ -77,7 +77,10 @@ export interface ApiParameterListJSON {
 }
 
 export interface ApiMethodSignatureJSON
-	extends ApiItemJSON, ApiTypeParameterListJSON, ApiParameterListJSON, ApiInheritableJSON {
+	extends ApiItemJSON,
+		ApiTypeParameterListJSON,
+		ApiParameterListJSON,
+		ApiInheritableJSON {
 	mergedSiblings: ApiMethodSignatureJSON[];
 	optional: boolean;
 	overloadIndex: number;

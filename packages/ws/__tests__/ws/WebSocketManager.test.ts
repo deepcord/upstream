@@ -1,137 +1,139 @@
 import type { GatewaySendPayload } from 'discord-api-types/v10';
-import { GatewayCapabilityBits, GatewayOpcodes } from 'discord-api-types/v10';
+import { GatewayOpcodes } from 'discord-api-types/v10';
 import { describe, expect, test, vi } from 'vitest';
 import { WebSocketManager, type IShardingStrategy } from '../../src/index.js';
 import { mockGatewayInformation } from '../gateway.mock.js';
 
-class MockStrategy implements IShardingStrategy {
-	public spawn = vi.fn();
+vi.useFakeTimers();
 
-	public connect = vi.fn();
+const NOW = vi.fn().mockReturnValue(Date.now());
+global.Date.now = NOW;
 
-	public destroy = vi.fn();
+test('fetch gateway information', async () => {
+	const fetchGatewayInformation = vi.fn(async () => mockGatewayInformation);
 
-	public send = vi.fn();
-
-	public fetchStatus = vi.fn();
-}
-
-test('connect requires gateway information', async () => {
 	const manager = new WebSocketManager({
 		token: 'A-Very-Fake-Token',
 		intents: 0,
+		fetchGatewayInformation,
 	});
 
-	// @ts-expect-error: Testing the runtime check for a missing gatewayInformation
-	await expect(manager.connect()).rejects.toThrow(TypeError);
-});
+	const initial = await manager.fetchGatewayInformation();
+	expect(initial).toEqual(mockGatewayInformation);
+	expect(fetchGatewayInformation).toHaveBeenCalledOnce();
 
-test('gateway information is not available before connecting', () => {
-	const manager = new WebSocketManager({
-		token: 'A-Very-Fake-Token',
-		intents: 0,
-	});
+	fetchGatewayInformation.mockClear();
 
-	expect(() => manager.getGatewayInformation()).toThrow(Error);
-	expect(() => manager.getShardCount()).toThrow(Error);
+	const cached = await manager.fetchGatewayInformation();
+	expect(cached).toEqual(mockGatewayInformation);
+	expect(fetchGatewayInformation).not.toHaveBeenCalled();
+
+	fetchGatewayInformation.mockClear();
+
+	const forced = await manager.fetchGatewayInformation(true);
+	expect(forced).toEqual(mockGatewayInformation);
+	expect(fetchGatewayInformation).toHaveBeenCalledOnce();
+
+	fetchGatewayInformation.mockClear();
+
+	NOW.mockReturnValue(Number.POSITIVE_INFINITY);
+	const cacheExpired = await manager.fetchGatewayInformation();
+	expect(cacheExpired).toEqual(mockGatewayInformation);
+	expect(fetchGatewayInformation).toHaveBeenCalledOnce();
 });
 
 describe('get shard count', () => {
-	test('with no shard count or ids', async () => {
-		const manager = new WebSocketManager({
-			token: 'A-Very-Fake-Token',
-			intents: 0,
-			buildStrategy: () => new MockStrategy(),
-		});
-
-		await manager.connect({ gatewayInformation: mockGatewayInformation });
-
-		expect(manager.getShardCount()).toBe(mockGatewayInformation.shards);
-	});
-
-	test('with shard count', () => {
+	test('with shard count', async () => {
 		const manager = new WebSocketManager({
 			token: 'A-Very-Fake-Token',
 			intents: 0,
 			shardCount: 2,
+			async fetchGatewayInformation() {
+				return mockGatewayInformation;
+			},
 		});
 
-		expect(manager.getShardCount()).toBe(2);
+		expect(await manager.getShardCount()).toBe(2);
 	});
 
-	test('with shard ids array', () => {
+	test('with shard ids array', async () => {
 		const shardIds = [5, 9];
 		const manager = new WebSocketManager({
 			token: 'A-Very-Fake-Token',
 			intents: 0,
 			shardIds,
+			async fetchGatewayInformation() {
+				return mockGatewayInformation;
+			},
 		});
 
-		expect(manager.getShardCount()).toBe(shardIds.at(-1)! + 1);
+		expect(await manager.getShardCount()).toBe(shardIds.at(-1)! + 1);
 	});
 
-	test('with shard id range', () => {
+	test('with shard id range', async () => {
 		const shardIds = { start: 5, end: 9 };
 		const manager = new WebSocketManager({
 			token: 'A-Very-Fake-Token',
 			intents: 0,
 			shardIds,
+			async fetchGatewayInformation() {
+				return mockGatewayInformation;
+			},
 		});
 
-		expect(manager.getShardCount()).toBe(shardIds.end + 1);
+		expect(await manager.getShardCount()).toBe(shardIds.end + 1);
 	});
 });
 
 test('update shard count', async () => {
+	const fetchGatewayInformation = vi.fn(async () => mockGatewayInformation);
+
 	const manager = new WebSocketManager({
 		token: 'A-Very-Fake-Token',
 		intents: 0,
 		shardCount: 2,
-		buildStrategy: () => new MockStrategy(),
+		fetchGatewayInformation,
 	});
 
-	expect(manager.getShardCount()).toBe(2);
+	expect(await manager.getShardCount()).toBe(2);
+	expect(fetchGatewayInformation).not.toHaveBeenCalled();
+
+	fetchGatewayInformation.mockClear();
 
 	await manager.updateShardCount(3);
-	expect(manager.getShardCount()).toBe(3);
-	expect(manager.getShardIds()).toStrictEqual([0, 1, 2]);
+	expect(await manager.getShardCount()).toBe(3);
+	expect(fetchGatewayInformation).toHaveBeenCalled();
 });
 
-test('it handles passing in both shardIds and shardCount', () => {
+test('it handles passing in both shardIds and shardCount', async () => {
 	const shardIds = { start: 2, end: 3 };
 	const manager = new WebSocketManager({
 		token: 'A-Very-Fake-Token',
 		intents: 0,
 		shardIds,
 		shardCount: 4,
+		async fetchGatewayInformation() {
+			return mockGatewayInformation;
+		},
 	});
 
-	expect(manager.getShardCount()).toBe(4);
-	expect(manager.getShardIds()).toStrictEqual([2, 3]);
-});
-
-describe('gateway capabilities', () => {
-	test('defaults to none', () => {
-		const manager = new WebSocketManager({
-			token: 'A-Very-Fake-Token',
-			intents: 0,
-		});
-
-		expect(manager.options.capabilities).toBe(0);
-	});
-
-	test('with a provided bitfield', () => {
-		const manager = new WebSocketManager({
-			token: 'A-Very-Fake-Token',
-			intents: 0,
-			capabilities: GatewayCapabilityBits.ChannelObfuscation,
-		});
-
-		expect(manager.options.capabilities).toBe(GatewayCapabilityBits.ChannelObfuscation);
-	});
+	expect(await manager.getShardCount()).toBe(4);
+	expect(await manager.getShardIds()).toStrictEqual([2, 3]);
 });
 
 test('strategies', async () => {
+	class MockStrategy implements IShardingStrategy {
+		public spawn = vi.fn();
+
+		public connect = vi.fn();
+
+		public destroy = vi.fn();
+
+		public send = vi.fn();
+
+		public fetchStatus = vi.fn();
+	}
+
 	const strategy = new MockStrategy();
 
 	const shardIds = [0, 1, 2];
@@ -140,18 +142,19 @@ test('strategies', async () => {
 		token: 'A-Very-Fake-Token',
 		intents: 0,
 		shardIds,
+		async fetchGatewayInformation() {
+			return mockGatewayInformation;
+		},
 		buildStrategy: () => strategy,
 	});
 
-	await manager.connect({ gatewayInformation: mockGatewayInformation });
-	expect(manager.getGatewayInformation()).toBe(mockGatewayInformation);
+	await manager.connect();
 	expect(strategy.spawn).toHaveBeenCalledWith(shardIds);
 	expect(strategy.connect).toHaveBeenCalled();
 
 	const destroyOptions = { reason: ':3' };
 	await manager.destroy(destroyOptions);
 	expect(strategy.destroy).toHaveBeenCalledWith(destroyOptions);
-	expect(() => manager.getGatewayInformation()).toThrow(Error);
 
 	const send: GatewaySendPayload = {
 		op: GatewayOpcodes.RequestGuildMembers,

@@ -16,8 +16,7 @@ import type { ApiEnumMember } from './ApiEnumMember.js';
  * @public
  */
 export interface IApiEnumOptions
-	extends
-		IApiItemContainerMixinOptions,
+	extends IApiItemContainerMixinOptions,
 		IApiNameMixinOptions,
 		IApiReleaseTagMixinOptions,
 		IApiDeclaredItemOptions,

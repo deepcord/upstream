@@ -21,10 +21,10 @@ describe('Context Menu Commands', () => {
 				expect(() => getBuilder().setName('A COMMAND').toJSON()).not.toThrowError();
 
 				// Translation: a_command
-				expect(() => getBuilder().setName('o_comandă').toJSON()).not.toThrowError();
+				expect(() => getBuilder().setName('o_comandă')).not.toThrowError();
 
 				// Translation: thx (according to GTranslate)
-				expect(() => getBuilder().setName('どうも').toJSON()).not.toThrowError();
+				expect(() => getBuilder().setName('どうも')).not.toThrowError();
 
 				expect(() => getBuilder().setName('🎉').toJSON()).not.toThrowError();
 				expect(() => getBuilder().setName('🫆').toJSON()).not.toThrowError();
@@ -41,15 +41,8 @@ describe('Context Menu Commands', () => {
 			};
 
 			test('GIVEN valid name localizations THEN does not throw error', () => {
-				expect(() =>
-					getBuilder().setName('test').setNameLocalization(Locale.EnglishUS, 'foobar').toJSON(),
-				).not.toThrowError();
-				expect(() =>
-					getBuilder()
-						.setName('test')
-						.setNameLocalizations({ [Locale.EnglishUS]: 'foobar' })
-						.toJSON(),
-				).not.toThrowError();
+				expect(() => getBuilder().setNameLocalization(Locale.EnglishUS, 'foobar')).not.toThrowError();
+				expect(() => getBuilder().setNameLocalizations({ [Locale.EnglishUS]: 'foobar' })).not.toThrowError();
 			});
 
 			test('GIVEN invalid name localizations THEN does throw error', () => {
@@ -78,15 +71,12 @@ describe('Context Menu Commands', () => {
 
 		describe('permissions', () => {
 			test('GIVEN valid permission string THEN does not throw error', () => {
-				expect(() => getBuilder().setName('test').setDefaultMemberPermissions('1').toJSON()).not.toThrowError();
+				expect(() => getBuilder().setDefaultMemberPermissions('1')).not.toThrowError();
 			});
 
 			test('GIVEN valid permission bitfield THEN does not throw error', () => {
 				expect(() =>
-					getBuilder()
-						.setName('test')
-						.setDefaultMemberPermissions(PermissionFlagsBits.AddReactions | PermissionFlagsBits.AttachFiles)
-						.toJSON(),
+					getBuilder().setDefaultMemberPermissions(PermissionFlagsBits.AddReactions | PermissionFlagsBits.AttachFiles),
 				).not.toThrowError();
 			});
 
@@ -100,14 +90,11 @@ describe('Context Menu Commands', () => {
 		describe('contexts', () => {
 			test('GIVEN a builder with valid contexts THEN does not throw an error', () => {
 				expect(() =>
-					getBuilder()
-						.setName('test')
-						.setContexts([InteractionContextType.Guild, InteractionContextType.BotDM])
-						.toJSON(),
+					getBuilder().setContexts([InteractionContextType.Guild, InteractionContextType.BotDM]),
 				).not.toThrowError();
 
 				expect(() =>
-					getBuilder().setName('test').setContexts(InteractionContextType.Guild, InteractionContextType.BotDM).toJSON(),
+					getBuilder().setContexts(InteractionContextType.Guild, InteractionContextType.BotDM),
 				).not.toThrowError();
 			});
 
@@ -123,17 +110,17 @@ describe('Context Menu Commands', () => {
 		describe('integration types', () => {
 			test('GIVEN a builder with valid integration types THEN does not throw an error', () => {
 				expect(() =>
-					getBuilder()
-						.setName('test')
-						.setIntegrationTypes([ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall])
-						.toJSON(),
+					getBuilder().setIntegrationTypes([
+						ApplicationIntegrationType.GuildInstall,
+						ApplicationIntegrationType.UserInstall,
+					]),
 				).not.toThrowError();
 
 				expect(() =>
-					getBuilder()
-						.setName('test')
-						.setIntegrationTypes(ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall)
-						.toJSON(),
+					getBuilder().setIntegrationTypes(
+						ApplicationIntegrationType.GuildInstall,
+						ApplicationIntegrationType.UserInstall,
+					),
 				).not.toThrowError();
 			});
 

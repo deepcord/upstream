@@ -15,8 +15,7 @@ import { ApiStaticMixin, type IApiStaticMixinOptions } from '../mixins/ApiStatic
  * @public
  */
 export interface IApiPropertyOptions
-	extends
-		IApiPropertyItemOptions,
+	extends IApiPropertyItemOptions,
 		IApiAbstractMixinOptions,
 		IApiProtectedMixinOptions,
 		IApiStaticMixinOptions,

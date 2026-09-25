@@ -8,6 +8,7 @@ import type { z } from 'zod';
 import { validate } from '../../../../util/validation.js';
 import type { SharedNameAndDescriptionData } from '../../SharedNameAndDescription.js';
 import { SharedNameAndDescription } from '../../SharedNameAndDescription.js';
+import { basicOptionPredicate } from '../Assertions.js';
 
 export interface ApplicationCommandOptionBaseData extends Partial<Pick<APIApplicationCommandOption, 'required'>> {
 	type: ApplicationCommandOptionType;
@@ -23,7 +24,7 @@ export abstract class ApplicationCommandOptionBase
 	/**
 	 * @internal
 	 */
-	protected static readonly predicate: z.ZodType;
+	protected static readonly predicate: z.ZodType = basicOptionPredicate;
 
 	/**
 	 * @internal

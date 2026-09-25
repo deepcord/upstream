@@ -1,3 +1,4 @@
+import type { URL } from 'node:url';
 import type { Snowflake } from 'discord-api-types/globals';
 
 /**
@@ -224,16 +225,6 @@ export function linkedRoleMention<RoleId extends Snowflake>(roleId: RoleId): `<i
 }
 
 /**
- * Formats a game id into a game profile mention.
- *
- * @typeParam GameId - This is inferred by the supplied game id
- * @param gameId - The game id to format
- */
-export function gameProfileMention<GameId extends Snowflake>(gameId: GameId): `<@$${GameId}>` {
-	return `<@$${gameId}>`;
-}
-
-/**
  * Formats an application command name and id into an application command mention.
  *
  * @typeParam CommandId - This is inferred by the supplied command id
@@ -298,8 +289,8 @@ export function chatInputApplicationCommandMention<
 >(
 	commandId: CommandId,
 	commandName: CommandName,
-	subcommandName?: SubcommandName,
-	subcommandGroupName?: SubcommandGroupName,
+	subcommandName?: SubcommandName | undefined,
+	subcommandGroupName?: SubcommandGroupName | undefined,
 ):
 	| `</${CommandName} ${SubcommandGroupName} ${SubcommandName}:${CommandId}>`
 	| `</${CommandName} ${SubcommandName}:${CommandId}>`
@@ -696,6 +687,7 @@ export function email<Email extends string>(
  */
 export function email<Email extends string>(email: Email, headers?: Record<string, string | readonly string[]>) {
 	if (headers) {
+		// eslint-disable-next-line n/prefer-global/url-search-params
 		const searchParams = new URLSearchParams(
 			Object.fromEntries(Object.entries(headers).map(([key, value]) => [key.toLowerCase(), value])),
 		);
@@ -733,11 +725,11 @@ export const TimestampStyles = {
 	ShortTime: 't',
 
 	/**
-	 * Medium time format, consisting of hours, minutes, and seconds.
+	 * Long time format, consisting of hours, minutes, and seconds.
 	 *
 	 * @example `16:20:30`
 	 */
-	MediumTime: 'T',
+	LongTime: 'T',
 
 	/**
 	 * Short date format, consisting of day, month, and year.
@@ -749,37 +741,23 @@ export const TimestampStyles = {
 	/**
 	 * Long date format, consisting of day, month, and year.
 	 *
-	 * @example `April 20, 2021`
+	 * @example `20 April 2021`
 	 */
 	LongDate: 'D',
 
 	/**
-	 * Long date-short time format, consisting of long date and short time.
+	 * Short date-time format, consisting of short date and short time formats.
 	 *
-	 * @example `April 20, 2021 at 16:20`
+	 * @example `20 April 2021 16:20`
 	 */
-	LongDateShortTime: 'f',
+	ShortDateTime: 'f',
 
 	/**
-	 * Full date-short time format, consisting of full date and short time.
+	 * Long date-time format, consisting of long date and short time formats.
 	 *
-	 * @example `Tuesday, April 20, 2021 at 16:20`
+	 * @example `Tuesday, 20 April 2021 16:20`
 	 */
-	FullDateShortTime: 'F',
-
-	/**
-	 * Short date, short time format, consisting of short date and short time.
-	 *
-	 * @example `20/04/2021, 16:20`
-	 */
-	ShortDateShortTime: 's',
-
-	/**
-	 * Short date, medium time format, consisting of short date and medium time.
-	 *
-	 * @example `20/04/2021, 16:20:30`
-	 */
-	ShortDateMediumTime: 'S',
+	LongDateTime: 'F',
 
 	/**
 	 * Relative time format, consisting of a relative duration format.

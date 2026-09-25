@@ -24,7 +24,6 @@ beforeEach(() => {
 	setGlobalDispatcher(mockAgent); // enabled the mock client to intercept requests
 
 	mockPool = mockAgent.get('https://discord.com');
-	api.setAgent(mockAgent);
 });
 
 afterEach(async () => {

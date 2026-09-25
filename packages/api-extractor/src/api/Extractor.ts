@@ -6,13 +6,12 @@ import type { ApiPackage } from '@discordjs/api-extractor-model';
 import { TSDocConfigFile } from '@microsoft/tsdoc-config';
 import {
 	FileSystem,
-	NewlineKind,
+	type NewlineKind,
 	PackageJsonLookup,
 	type IPackageJson,
 	type INodePackageJson,
 	Path,
 } from '@rushstack/node-core-library';
-import { structuredPatch, formatPatch, type StructuredPatch } from 'diff';
 import * as resolve from 'resolve';
 import * as semver from 'semver';
 import * as ts from 'typescript';
@@ -68,15 +67,6 @@ export interface IExtractorInvokeOptions {
 	 * the STDERR/STDOUT console.
 	 */
 	messageCallback?(this: void, message: ExtractorMessage): void;
-
-	/**
-	 * If true, then any differences between the actual and expected API reports will be
-	 * printed on the console.
-	 *
-	 * @remarks
-	 * The diff is not printed if the expected API report file has not been created yet.
-	 */
-	printApiReportDiff?: boolean;
 
 	/**
 	 * If true, API Extractor will print diagnostic information used for troubleshooting problems.
@@ -158,13 +148,12 @@ export class ExtractorResult {
 	 * @internal
 	 */
 	public constructor(properties: ExtractorResult) {
-		const { compilerState, extractorConfig, succeeded, apiReportChanged, errorCount, warningCount } = properties;
-		this.compilerState = compilerState;
-		this.extractorConfig = extractorConfig;
-		this.succeeded = succeeded;
-		this.apiReportChanged = apiReportChanged;
-		this.errorCount = errorCount;
-		this.warningCount = warningCount;
+		this.compilerState = properties.compilerState;
+		this.extractorConfig = properties.extractorConfig;
+		this.succeeded = properties.succeeded;
+		this.apiReportChanged = properties.apiReportChanged;
+		this.errorCount = properties.errorCount;
+		this.warningCount = properties.warningCount;
 	}
 }
 
@@ -205,56 +194,37 @@ export class Extractor {
 	 * Invoke API Extractor using an already prepared `ExtractorConfig` object.
 	 */
 	public static invoke(extractorConfig: ExtractorConfig, options?: IExtractorInvokeOptions): ExtractorResult {
-		const {
-			packageFolder,
-			messages,
-			tsdocConfiguration,
-			tsdocConfigFile: { filePath: tsdocConfigFilePath, fileNotFound: tsdocConfigFileNotFound },
-			apiJsonFilePath,
-			newlineKind,
-			reportTempFolder,
-			reportFolder,
-			apiReportEnabled,
-			reportConfigs,
-			testMode,
-			rollupEnabled,
-			publicTrimmedFilePath,
-			alphaTrimmedFilePath,
-			betaTrimmedFilePath,
-			untrimmedFilePath,
-			tsdocMetadataEnabled,
-			tsdocMetadataFilePath,
-		} = extractorConfig;
-		const {
-			localBuild = false,
-			compilerState = CompilerState.create(extractorConfig, options),
-			docModelMinify = false,
-			messageCallback,
-			showVerboseMessages = false,
-			showDiagnostics = false,
-			printApiReportDiff = false,
-		} = options ?? {};
+		const ioptions = options ?? {};
+
+		const localBuild: boolean = ioptions.localBuild ?? false;
+
+		let compilerState: CompilerState | undefined;
+		if (ioptions.compilerState) {
+			compilerState = ioptions.compilerState;
+		} else {
+			compilerState = CompilerState.create(extractorConfig, ioptions);
+		}
 
 		const sourceMapper: SourceMapper = new SourceMapper();
 
 		const messageRouter: MessageRouter = new MessageRouter({
-			workingPackageFolder: packageFolder,
-			messageCallback,
-			messagesConfig: messages || {},
-			showVerboseMessages,
-			showDiagnostics,
-			tsdocConfiguration,
+			workingPackageFolder: extractorConfig.packageFolder,
+			messageCallback: ioptions.messageCallback,
+			messagesConfig: extractorConfig.messages || {},
+			showVerboseMessages: Boolean(ioptions.showVerboseMessages),
+			showDiagnostics: Boolean(ioptions.showDiagnostics),
+			tsdocConfiguration: extractorConfig.tsdocConfiguration,
 			sourceMapper,
 		});
 
 		if (
-			tsdocConfigFilePath &&
-			!tsdocConfigFileNotFound &&
-			!Path.isEqual(tsdocConfigFilePath, ExtractorConfig._tsdocBaseFilePath)
+			extractorConfig.tsdocConfigFile.filePath &&
+			!extractorConfig.tsdocConfigFile.fileNotFound &&
+			!Path.isEqual(extractorConfig.tsdocConfigFile.filePath, ExtractorConfig._tsdocBaseFilePath)
 		) {
 			messageRouter.logVerbose(
 				ConsoleMessageId.UsingCustomTSDocConfig,
-				`Using custom TSDoc config from ${tsdocConfigFilePath}`,
+				'Using custom TSDoc config from ' + extractorConfig.tsdocConfigFile.filePath,
 			);
 		}
 
@@ -275,7 +245,7 @@ export class Extractor {
 
 			messageRouter.logDiagnosticHeader('TSDoc configuration');
 			// Convert the TSDocConfiguration into a tsdoc.json representation
-			const combinedConfigFile: TSDocConfigFile = TSDocConfigFile.loadFromParser(tsdocConfiguration);
+			const combinedConfigFile: TSDocConfigFile = TSDocConfigFile.loadFromParser(extractorConfig.tsdocConfiguration);
 			const serializedTSDocConfig: object = MessageRouter.buildJsonDumpObject(combinedConfigFile.saveToObject());
 			messageRouter.logDiagnostic(JSON.stringify(serializedTSDocConfig, undefined, 2));
 			messageRouter.logDiagnosticFooter();
@@ -301,14 +271,14 @@ export class Extractor {
 		}
 
 		if (modelBuilder.docModelEnabled) {
-			messageRouter.logVerbose(ConsoleMessageId.WritingDocModelFile, `Writing: ${apiJsonFilePath}`);
-			apiPackage.saveToJsonFile(apiJsonFilePath, {
+			messageRouter.logVerbose(ConsoleMessageId.WritingDocModelFile, 'Writing: ' + extractorConfig.apiJsonFilePath);
+			apiPackage.saveToJsonFile(extractorConfig.apiJsonFilePath, {
 				toolPackage: Extractor.packageName,
 				toolVersion: Extractor.version,
-				minify: docModelMinify,
-				newlineConversion: newlineKind,
+				minify: options?.docModelMinify ?? false,
+				newlineConversion: extractorConfig.newlineKind,
 				ensureFolderExists: true,
-				testMode,
+				testMode: extractorConfig.testMode,
 			});
 		}
 
@@ -317,31 +287,50 @@ export class Extractor {
 				collector,
 				extractorConfig,
 				messageRouter,
-				reportTempFolder,
-				reportFolder,
+				extractorConfig.reportTempFolder,
+				extractorConfig.reportFolder,
 				reportConfig,
 				localBuild,
-				printApiReportDiff,
 			);
 		}
 
 		let anyReportChanged = false;
-		if (apiReportEnabled) {
-			for (const reportConfig of reportConfigs) {
+		if (extractorConfig.apiReportEnabled) {
+			for (const reportConfig of extractorConfig.reportConfigs) {
 				anyReportChanged = writeApiReport(reportConfig) || anyReportChanged;
 			}
 		}
 
-		if (rollupEnabled) {
-			Extractor._generateRollupDtsFile(collector, publicTrimmedFilePath, DtsRollupKind.PublicRelease, newlineKind);
-			Extractor._generateRollupDtsFile(collector, alphaTrimmedFilePath, DtsRollupKind.AlphaRelease, newlineKind);
-			Extractor._generateRollupDtsFile(collector, betaTrimmedFilePath, DtsRollupKind.BetaRelease, newlineKind);
-			Extractor._generateRollupDtsFile(collector, untrimmedFilePath, DtsRollupKind.InternalRelease, newlineKind);
+		if (extractorConfig.rollupEnabled) {
+			Extractor._generateRollupDtsFile(
+				collector,
+				extractorConfig.publicTrimmedFilePath,
+				DtsRollupKind.PublicRelease,
+				extractorConfig.newlineKind,
+			);
+			Extractor._generateRollupDtsFile(
+				collector,
+				extractorConfig.alphaTrimmedFilePath,
+				DtsRollupKind.AlphaRelease,
+				extractorConfig.newlineKind,
+			);
+			Extractor._generateRollupDtsFile(
+				collector,
+				extractorConfig.betaTrimmedFilePath,
+				DtsRollupKind.BetaRelease,
+				extractorConfig.newlineKind,
+			);
+			Extractor._generateRollupDtsFile(
+				collector,
+				extractorConfig.untrimmedFilePath,
+				DtsRollupKind.InternalRelease,
+				extractorConfig.newlineKind,
+			);
 		}
 
-		if (tsdocMetadataEnabled) {
+		if (extractorConfig.tsdocMetadataEnabled) {
 			// Write the tsdoc-metadata.json file for this project
-			PackageMetadataManager.writeTsdocMetadataFile(tsdocMetadataFilePath, newlineKind);
+			PackageMetadataManager.writeTsdocMetadataFile(extractorConfig.tsdocMetadataFilePath, extractorConfig.newlineKind);
 		}
 
 		// Show all the messages that we collected during analysis
@@ -380,7 +369,6 @@ export class Extractor {
 	 * which the new report will be written post-comparison.
 	 * @param reportConfig - API report configuration, including its file name and {@link ApiReportVariant}.
 	 * @param localBuild - Whether the report is made locally.
-	 * @param printApiReportDiff - {@link IExtractorInvokeOptions.printApiReportDiff}
 	 * @returns Whether or not the newly generated report differs from the existing report (if one exists).
 	 */
 	private static _writeApiReport(
@@ -391,7 +379,6 @@ export class Extractor {
 		reportDirectoryPath: string,
 		reportConfig: IExtractorConfigApiReport,
 		localBuild: boolean,
-		printApiReportDiff: boolean,
 	): boolean {
 		let apiReportChanged = false;
 
@@ -434,9 +421,7 @@ export class Extractor {
 
 			// Compare it against the expected file
 			if (FileSystem.exists(expectedEntryPointApiReportPath)) {
-				const expectedApiReportContent: string = FileSystem.readFile(expectedEntryPointApiReportPath, {
-					convertLineEndings: NewlineKind.Lf,
-				});
+				const expectedApiReportContent: string = FileSystem.readFile(expectedEntryPointApiReportPath);
 
 				if (ApiReportGenerator.areEquivalentApiFileContents(actualApiReportContent, expectedApiReportContent)) {
 					messageRouter.logVerbose(
@@ -466,22 +451,6 @@ export class Extractor {
 								` or perform a local build (which does this automatically).` +
 								` See the Git repo documentation for more info.`,
 						);
-					}
-
-					if (messageRouter.showVerboseMessages || printApiReportDiff) {
-						const patch: StructuredPatch = structuredPatch(
-							expectedEntryPointApiReportShortPath,
-							actualEntryPointApiReportShortPath,
-							expectedApiReportContent,
-							actualApiReportContent,
-						);
-						const logFunction:
-							| (typeof MessageRouter.prototype)['logVerbose']
-							| (typeof MessageRouter.prototype)['logWarning'] = printApiReportDiff
-							? messageRouter.logWarning.bind(messageRouter)
-							: messageRouter.logVerbose.bind(messageRouter);
-
-						logFunction(ConsoleMessageId.ApiReportDiff, 'Changes to the API report:\n\n' + formatPatch(patch));
 					}
 				}
 			} else {
